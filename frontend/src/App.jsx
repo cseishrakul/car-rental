@@ -14,34 +14,25 @@ import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
+import LandingPage from "./pages/frontend/LandingPage";
+import SignInForm from "./components/auth/SignInForm";
+import SignUpForm from "./components/auth/SignUpForm";
 
 function App() {
   return (
     <Router>
       <ScrollToTop />
       <Routes>
-
-        {/* Auth Pages OUTSIDE Layout */}
+        {/* Public User Interface */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
 
-        {/* Dashboard Pages INSIDE Layout */}
+        {/* Dashboard Protected Area */}
         <Route element={<AppLayout />}>
-          <Route index path="/" element={<Home />} />
-          <Route path="/profile" element={<UserProfile />} />
-          <Route path="/calendar" element={<Calendar />} />
-          <Route path="/blank" element={<Blank />} />
-          <Route path="/form-elemets" element={<FormElements />} />
-          <Route path="/basic-tables" element={<BasicTables />} />
-          <Route path="/alerts" element={<Alerts />} />
-          <Route path="/avaters" element={<Avaters />} />
-          <Route path="/line-chart" element={<LineChart />} />
-          <Route path="/bar-chart" element={<BarChart />} />
+          <Route path="/dashboard" element={<Home />} />
+          <Route path="/dashboard/profile" element={<UserProfile />} />
         </Route>
-
-        {/* Catch-all 404 */}
-        <Route path="*" element={<NotFound />} />
-
       </Routes>
     </Router>
   );

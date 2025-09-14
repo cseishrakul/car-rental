@@ -1,12 +1,33 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { IoChevronBack } from "react-icons/io5";
 import Label from "../form/Label";
+import api from "../../api/axios";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      const res = await api.post("/login", { email, password });
+      localStorage.setItem("auth_token", res.data.token);
+      localStorage.setItem("auth_user", JSON.stringify(res.data.user));
+
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err.response?.data?.message || "Login Failed");
+    }
+  };
 
   return (
     <div className="flex flex-col flex-1">
@@ -71,7 +92,8 @@ export default function SignInForm() {
             </div>
           </div>
 
-          <form>
+          <form onSubmit={handleSubmit}>
+            {error && <p className="text-red-600 text-sm my-2">{error}</p> }
             <div className="space-y-6">
               <div>
                 <Label>
@@ -80,6 +102,8 @@ export default function SignInForm() {
                 <input
                   type="email"
                   placeholder="info@gmail.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-2 text-sm border rounded-lg dark:bg-gray-900 dark:border-gray-700 dark:text-white"
                 />
               </div>
@@ -91,6 +115,8 @@ export default function SignInForm() {
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     className="w-full px-4 py-2 text-sm border rounded-lg dark:bg-gray-900 dark:border-gray-700 dark:text-white"
                   />
                   <span
