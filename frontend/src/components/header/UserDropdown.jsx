@@ -1,17 +1,31 @@
 import { useState } from "react";
 import DropdownItem from "../ui/dropdown/DropdownItem";
 import Dropdown from "../ui/dropdown/Dropdown";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { IoIosArrowDown } from "react-icons/io";
 import { FiUser } from "react-icons/fi";
 import { CiSettings, CiCircleAlert } from "react-icons/ci";
 import { HiOutlineLogout } from "react-icons/hi";
+import api from "../../api/axios";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-
   const toggleDropdown = () => setIsOpen(!isOpen);
   const closeDropdown = () => setIsOpen(false);
+
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await api.post("/logout");
+    } catch (err) {
+      console.log("Logout Failed", err);
+    }
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("auth_user");
+    closeDropdown();
+    navigate("/signin");
+  };
 
   return (
     <div className="relative">
@@ -83,13 +97,13 @@ export default function UserDropdown() {
         </ul>
 
         {/* Logout */}
-        <Link
-          to="/signin"
+        <button
+          onClick={handleLogout}
           className="flex items-center gap-3 px-3 py-2 mt-3 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
         >
           <HiOutlineLogout className="w-5 h-5 p-1 border border-gray-400 rounded-full text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-white" />
           Sign out
-        </Link>
+        </button>
       </Dropdown>
     </div>
   );

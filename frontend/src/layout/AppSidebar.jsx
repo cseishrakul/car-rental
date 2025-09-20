@@ -12,78 +12,187 @@ import {
   FiPieChart,
   FiTable,
   FiUser,
+  FiUsers,
 } from "react-icons/fi";
 import { LuPlug2 } from "react-icons/lu";
 
 import { useSidebar } from "../context/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
 
-const navItems = [
-  {
-    icon: <FiGrid />,
-    name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/", pro: false }],
-  },
-  { icon: <FiCalendar />, name: "Calendar", path: "/calendar" },
-  { icon: <FiUser />, name: "User Profile", path: "/profile" },
-  {
-    name: "Forms",
-    icon: <FiList />,
-    subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-  },
-  {
-    name: "Tables",
-    icon: <FiTable />,
-    subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
-  },
-  {
-    name: "Pages",
-    icon: <FiFileText />,
-    subItems: [
-      { name: "Blank Page", path: "/blank", pro: false },
-      { name: "404 Error", path: "/error-404", pro: false },
-    ],
-  },
-];
-
-const othersItems = [
-  {
-    icon: <FiPieChart />,
-    name: "Charts",
-    subItems: [
-      { name: "Line Chart", path: "/line-chart", pro: false },
-      { name: "Bar Chart", path: "/bar-chart", pro: false },
-    ],
-  },
-  {
-    icon: <FiBox />,
-    name: "UI Elements",
-    subItems: [
-      { name: "Alerts", path: "/alerts", pro: false },
-      { name: "Avatar", path: "/avatars", pro: false },
-      { name: "Badge", path: "/badge", pro: false },
-      { name: "Buttons", path: "/buttons", pro: false },
-      { name: "Images", path: "/images", pro: false },
-      { name: "Videos", path: "/videos", pro: false },
-    ],
-  },
-  {
-    icon: <LuPlug2 />,
-    name: "Authentication",
-    subItems: [
-      { name: "Sign In", path: "/signin", pro: false },
-      { name: "Sign Up", path: "/signup", pro: false },
-    ],
-  },
-];
+const menuItems = {
+  admin: [
+    {
+      icon: <FiGrid />,
+      name: "Dashboard",
+      path: "/dashboard",
+    },
+    {
+      icon: <FiUsers />,
+      name: "Manager",
+      subItems: [
+        {
+          name: "Add Manager",
+          path: "/dashboard/add-manager",
+        },
+        {
+          name: "All Manager",
+          path: "/dashboard/all-manager",
+        },
+      ],
+    },
+    {
+      icon: <FiUser />,
+      name: "User Profile",
+      subItems: [
+        {
+          name: "Edit Profile",
+          path: "/dashboard/edit-profile",
+        },
+        {
+          name: "View Profile",
+          path: "/dashboard/profile",
+        },
+      ],
+    },
+    {
+      icon: <FiList />,
+      name: "Cars",
+      subItems: [
+        {
+          name: "Add Car",
+          path: "/dashboard/add-car",
+        },
+        {
+          name: "All Car",
+          path: "/dashboard/cars",
+        },
+      ],
+    },
+    {
+      icon: <FiList />,
+      name: "Drivers",
+      subItems: [
+        {
+          name: "Add Driver",
+          path: "/dashboard/add-driver",
+        },
+        {
+          name: "All Driver",
+          path: "/dashboard/drivers",
+        },
+      ],
+    },
+    {
+      icon: <FiList />,
+      name: "Bookings",
+      subItems: [
+        {
+          name: "Add Driver",
+          path: "/dashboard/add-driver",
+        },
+        {
+          name: "All Driver",
+          path: "/dashboard/drivers",
+        },
+      ],
+    },
+  ],
+  manager: [
+    {
+      icon: <FiGrid />,
+      name: "Dashboard",
+      path: "/dashboard",
+    },
+    {
+      icon: <FiUser />,
+      name: "User Profile",
+      subItems: [
+        {
+          name: "Edit Profile",
+          path: "/dashboard/edit-profile",
+        },
+        {
+          name: "View Profile",
+          path: "/dashboard/profile",
+        },
+      ],
+    },
+    {
+      icon: <FiList />,
+      name: "Cars",
+      subItems: [
+        {
+          name: "Add Car",
+          path: "/dashboard/add-car",
+        },
+        {
+          name: "All Car",
+          path: "/dashboard/cars",
+        },
+      ],
+    },
+    {
+      icon: <FiList />,
+      name: "Drivers",
+      subItems: [
+        {
+          name: "Add Driver",
+          path: "/dashboard/add-driver",
+        },
+        {
+          name: "All Driver",
+          path: "/dashboard/drivers",
+        },
+      ],
+    },
+    {
+      icon: <FiList />,
+      name: "Bookings",
+      subItems: [
+        {
+          name: "Add Driver",
+          path: "/dashboard/add-driver",
+        },
+        {
+          name: "All Driver",
+          path: "/dashboard/drivers",
+        },
+      ],
+    },
+  ],
+  driver: [
+    {
+      icon: <FiGrid />,
+      name: "My Assignments",
+      path: "/dashboard",
+    },
+    {
+      icon: <FiUser />,
+      name: "User Profile",
+      subItems: [
+        {
+          name: "Edit Profile",
+          path: "/dashboard/edit-profile",
+        },
+        {
+          name: "View Profile",
+          path: "/dashboard/profile",
+        },
+      ],
+    },
+  ],
+};
 
 const AppSidebar = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
-
   const [openSubmenu, setOpenSubmenu] = useState(null);
   const [subMenuHeight, setSubMenuHeight] = useState({});
   const subMenuRefs = useRef({});
+
+  const user = JSON.parse(localStorage.getItem("auth_user"));
+  const role = user?.role || "user";
+  const navItems = menuItems[role];
 
   const isActive = useCallback(
     (path) => location.pathname === path,
@@ -92,23 +201,22 @@ const AppSidebar = () => {
 
   useEffect(() => {
     let submenuMatched = false;
-    ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
-      items.forEach((nav, index) => {
-        nav.subItems?.forEach((subItem) => {
+    navItems.forEach((nav, index) => {
+      if (nav.subItems) {
+        nav.subItems.forEach((subItem) => {
           if (isActive(subItem.path)) {
-            setOpenSubmenu({ type: menuType, index });
+            setOpenSubmenu({ index });
             submenuMatched = true;
           }
         });
-      });
+      }
     });
     if (!submenuMatched) setOpenSubmenu(null);
-  }, [location, isActive]);
+  }, [location, isActive, navItems]);
 
   useEffect(() => {
     if (openSubmenu !== null) {
-      const key = `${openSubmenu.type}-${openSubmenu.index}`;
+      const key = `${openSubmenu.index}`;
       if (subMenuRefs.current[key]) {
         setSubMenuHeight((prev) => ({
           ...prev,
@@ -118,23 +226,19 @@ const AppSidebar = () => {
     }
   }, [openSubmenu]);
 
-  const handleSubmenuToggle = (index, menuType) => {
-    setOpenSubmenu((prev) =>
-      prev?.type === menuType && prev?.index === index
-        ? null
-        : { type: menuType, index }
-    );
+  const handleSubmenuToggle = (index) => {
+    setOpenSubmenu((prev) => (prev?.index === index ? null : { index }));
   };
 
-  const renderMenuItems = (items, menuType) => (
+  const renderMenuItems = (items) => (
     <ul className="flex flex-col gap-4">
       {items.map((nav, index) => (
         <li key={nav.name}>
           {nav.subItems ? (
             <button
-              onClick={() => handleSubmenuToggle(index, menuType)}
+              onClick={() => handleSubmenuToggle(index)}
               className={`menu-item group ${
-                openSubmenu?.type === menuType && openSubmenu?.index === index
+                openSubmenu?.index === index
                   ? "menu-item-active"
                   : "menu-item-inactive"
               } cursor-pointer ${
@@ -145,7 +249,7 @@ const AppSidebar = () => {
             >
               <span
                 className={`menu-item-icon-size ${
-                  openSubmenu?.type === menuType && openSubmenu?.index === index
+                  openSubmenu?.index === index
                     ? "menu-item-icon-active"
                     : "menu-item-icon-inactive"
                 }`}
@@ -158,7 +262,6 @@ const AppSidebar = () => {
               {(isExpanded || isHovered || isMobileOpen) && (
                 <FiChevronDown
                   className={`ml-auto w-5 h-5 transition-transform duration-200 ${
-                    openSubmenu?.type === menuType &&
                     openSubmenu?.index === index
                       ? "rotate-180 text-brand-500"
                       : ""
@@ -192,13 +295,13 @@ const AppSidebar = () => {
           {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
             <div
               ref={(el) => {
-                subMenuRefs.current[`${menuType}-${index}`] = el;
+                subMenuRefs.current[`${index}`] = el;
               }}
               className="overflow-hidden transition-all duration-300"
               style={{
                 height:
-                  openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? `${subMenuHeight[`${menuType}-${index}`]}px`
+                  openSubmenu?.index === index
+                    ? `${subMenuHeight[`${index}`]}px`
                     : "0px",
               }}
             >
@@ -214,30 +317,6 @@ const AppSidebar = () => {
                       }`}
                     >
                       {subItem.name}
-                      <span className="flex items-center gap-1 ml-auto">
-                        {subItem.new && (
-                          <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge`}
-                          >
-                            new
-                          </span>
-                        )}
-                        {subItem.pro && (
-                          <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge`}
-                          >
-                            pro
-                          </span>
-                        )}
-                      </span>
                     </Link>
                   </li>
                 ))}
@@ -306,23 +385,7 @@ const AppSidebar = () => {
                   <FiMoreHorizontal className="size-6" />
                 )}
               </h2>
-              {renderMenuItems(navItems, "main")}
-            </div>
-            <div>
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Others"
-                ) : (
-                  <FiMoreHorizontal />
-                )}
-              </h2>
-              {renderMenuItems(othersItems, "others")}
+              {renderMenuItems(navItems)}
             </div>
           </div>
         </nav>

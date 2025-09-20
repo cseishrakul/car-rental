@@ -14,6 +14,7 @@ class AuthController extends Controller
         return response()->json([$request->user()]);
     }
 
+    // We'll make its frontend later -- 20/09/25
     public function register(Request $request){
         $request->validate([
             'name' => 'required|string|max:255',
