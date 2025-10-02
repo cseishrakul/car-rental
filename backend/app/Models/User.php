@@ -41,4 +41,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function driverProfile(){
+        return $this->hasOne(\App\Models\DriverProfile::class);
+    }
+
 }

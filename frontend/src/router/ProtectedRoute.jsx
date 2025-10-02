@@ -6,6 +6,7 @@ import AddManager from '../pages/Manager/AddManager'
 import AppLayout from "../layout/AppLayout";
 import Protect from "./Protect";
 import AddCar from "../pages/Cars/AddCar";
+import AllCar from "../pages/Cars/AllCar";
 
 export default function ProtectedRoute() {
   return (
@@ -16,6 +17,7 @@ export default function ProtectedRoute() {
           <Route path="/dashboard/profile" element={<UserProfiles />} />
           <Route path="/dashboard/add-manager" element={<AddManager />} />
           <Route path="/dashboard/add-car" element={<AddCar />} />
+          <Route path="/dashboard/cars" element={<AllCar />} />
         </Route>
       </Route>
     </Routes>
