@@ -73,8 +73,8 @@ const menuItems = {
       name: "Drivers",
       subItems: [
         {
-          name: "Add Driver",
-          path: "/dashboard/add-driver",
+          name: "Pending Drivers",
+          path: "/dashboard/pending-drivers",
         },
         {
           name: "All Driver",

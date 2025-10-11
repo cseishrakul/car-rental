@@ -47,18 +47,132 @@ class DriverController extends Controller
             'license_number' => $data['license_number'],
             'nid' => $data['nid'] ?? null,
             'experience_years' => $data['experience_years'] ?? null,
-            'license_image' => $licenseImagePath ? asset('storage/'.$licenseImagePath):null,
-            'nid_image' => $nidImagePath ? asset('storage/'.$nidImagePath):null,
-            'profile_photo' => $profilePhotoPath ? asset('storage/'.$profilePhotoPath):null,
+            'license_image' => $licenseImagePath ? asset('storage/' . $licenseImagePath) : null,
+            'nid_image' => $nidImagePath ? asset('storage/' . $nidImagePath) : null,
+            'profile_photo' => $profilePhotoPath ? asset('storage/' . $profilePhotoPath) : null,
             'status' => 'pending',
         ]);
 
         return response()->json([
             'message' => 'Driver Registration Done.Awaiting For Manager To Approve It!',
             'driver' => [
-                'user' => $user->only(['id','name','email','role']),
+                'user' => $user->only(['id', 'name', 'email', 'role']),
                 'profile' => $profile
             ]
-        ],201);
+        ], 201);
+    }
+
+
+    public function pending(Request $request)
+    {
+        $auth = $request->user();
+        if (!$auth || !in_array($auth->role, ['admin', 'manager'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $drivers = DriverProfile::with('user')->where('status', 'pending')->paginate(20);
+        return response()->json($drivers);
+    }
+
+    public function approve(Request $request, $id)
+    {
+        $auth = $request->user();
+        if (!$auth || !in_array($auth->role, ['admin', 'manager'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $data = $request->validate([
+            'assigned_car_id' => 'nullable|exists:cars,id',
+        ]);
+
+        $profile = DriverProfile::find($id);
+
+        if (!$profile) return response()->json(['message' => 'Driver not found!'], 404);
+
+        $profile->status = 'approved';
+        $profile->assigned_car_id = $data['assigned_car_id'] ?? null;
+        $profile->save();
+
+        // optionally send email to driver
+
+        return response()->json([
+            'message' => 'Driver Approved and car has been assigned!',
+            'profile' => $profile->load('user', 'car')
+        ]);
+    }
+
+    public function reject(Request $request, $id)
+    {
+        $auth = $request->user();
+        if (!$auth || !in_array($auth->role, ['admin', 'manager'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $profile = DriverProfile::find($id);
+        if (!$profile) return response()->json(['message' => 'Driver not found'], 404);
+
+        $profile->status = 'rejected';
+        $profile->save();
+
+        return response()->json(['message' => 'Driver rejectd', 'profile' => $profile]);
+    }
+
+    public function me(Request $request)
+    {
+        $user = $request->user();
+        if ($user->role !== 'driver') {
+            return response()->json(['message' => 'You are not a driver!'], 403);
+        }
+
+        $profile = $user->driverProfile()->with('car')->first();
+        return response()->json(['user' => $user, 'profile' => $profile]);
+    }
+
+
+    public function index(Request $request)
+    {
+        $auth = $request->user();
+        if (!$auth || !in_array($auth->role, ['admin', 'manager'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $drivers = DriverProfile::with('user', 'car')->paginate(20);
+        return response()->json($drivers);
+    }
+
+    public function setPending(Request $request, $id)
+    {
+        $auth = $request->user();
+        if (!$auth || !in_array($auth->role, ['admin', 'manager'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $profile = DriverProfile::find($id);
+        if (!$profile) return response()->json(['message' => 'Driver not found'], 404);
+        $profile->status = 'pending';
+        $profile->save();
+
+        return response()->json(['message' => 'Driver set to pending again', 'profile' => $profile]);
+    }
+
+    public function assignCar(Request $request, $id)
+    {
+        $auth = $request->user();
+        if (!$auth || !in_array($auth->role, ['admin', 'manager'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $data = $request->validate([
+            'assigned_car_id' => 'required|exists:cars,id'
+        ]);
+
+        $profile = DriverProfile::find($id);
+        if (!$profile) return response()->json(['message' => 'Driver not found'], 404);
+
+        $profile->assigned_car_id = $data['assigned_car_id'];
+
+        $profile->save();
+
+        return response()->json(['message' => 'Car re-assigned to driver', 'profile' => $profile->load('car')]);
     }
 }
