@@ -77,8 +77,8 @@ const menuItems = {
           path: "/dashboard/pending-drivers",
         },
         {
-          name: "All Driver",
-          path: "/dashboard/drivers",
+          name: "Drivers List",
+          path: "/dashboard/drivers-list",
         },
       ],
     },
@@ -136,12 +136,12 @@ const menuItems = {
       name: "Drivers",
       subItems: [
         {
-          name: "Add Driver",
-          path: "/dashboard/add-driver",
+          name: "Pending Drivers",
+          path: "/dashboard/pending-drivers",
         },
         {
-          name: "All Driver",
-          path: "/dashboard/drivers",
+          name: "Drivers List",
+          path: "/dashboard/drivers-list",
         },
       ],
     },
@@ -176,7 +176,7 @@ const menuItems = {
         },
         {
           name: "View Profile",
-          path: "/dashboard/profile",
+          path: "/dashboard/driver/profile",
         },
       ],
     },

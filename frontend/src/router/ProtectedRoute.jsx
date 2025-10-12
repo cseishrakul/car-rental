@@ -7,6 +7,8 @@ import Protect from "./Protect";
 import AddCar from "../pages/Cars/AddCar";
 import AllCar from "../pages/Cars/AllCar";
 import PendingDrivers from "../pages/Driver/PendingDrivers";
+import DriverList from "../pages/Driver/DriverList";
+import DriverProfile from "../pages/Driver/DriverProfile";
 
 export default function ProtectedRoute() {
   return (
@@ -19,6 +21,8 @@ export default function ProtectedRoute() {
           <Route path="/dashboard/add-car" element={<AddCar />} />
           <Route path="/dashboard/cars" element={<AllCar />} />
           <Route path="/dashboard/pending-drivers" element={<PendingDrivers />} />
+          <Route path="/dashboard/drivers-list" element={<DriverList />} />
+          <Route path="/dashboard/driver/profile" element={<DriverProfile />} />
 
         </Route>
       </Route>

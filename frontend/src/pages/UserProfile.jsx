@@ -3,8 +3,12 @@ import UserMetaCard from "../components/UserProfile/UserMetaCard";
 import UserInfoCard from "../components/UserProfile/UserInfoCard";
 import UserAddressCard from "../components/UserProfile/UserAddressCard";
 import PageMeta from "../components/common/PageMeta";
+import { useEffect, useState } from "react";
+import api from "../api/axios";
 
 export default function UserProfiles() {
+  
+
   return (
     <>
       <PageMeta
