@@ -10,10 +10,44 @@ const AddCar = () => {
   const [dailyRate, setDailyRate] = useState("");
   const [status, setStatus] = useState("available");
   const [imageFile, setImageFile] = useState(null);
+  const [imageData, setImageData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-
   const navigate = useNavigate();
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const uploadData = new FormData();
+    uploadData.append("file", file);
+    uploadData.append("upload_preset", "car_rental");
+    setLoading(true);
+    try {
+      const res = await fetch(
+        "https://api.cloudinary.com/v1_1/dsgoi1hul/image/upload",
+        {
+          method: "POST",
+          body: uploadData,
+        }
+      );
+      const data = await res.json();
+
+      if (data.secure_url) {
+        setImageData({
+          url: data.secure_url,
+          public_id: data.public_id,
+        });
+      } else {
+        throw new Error("Upload Failed");
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage("Image Upload Failed!");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,12 +60,6 @@ const AddCar = () => {
       return;
     }
 
-    if (imageFile && imageFile.size > 2 * 1024 * 1024) {
-      setMessage("Image size should not exceed 2MB");
-      setLoading(false);
-      return;
-    }
-
     try {
       const formData = new FormData();
       formData.append("name", name);
@@ -40,7 +68,10 @@ const AddCar = () => {
       formData.append("daily_rate", dailyRate);
       formData.append("status", status);
 
-      if (imageFile) formData.append("image", imageFile);
+      if(imageData){
+        formData.append("image",imageData.url);
+        formData.append("image_public_id",imageData.public_id)
+      }
 
       const res = await api.post("/cars", formData, {
         headers: {
@@ -54,8 +85,6 @@ const AddCar = () => {
       setModel("");
       setDailyRate("");
       setStatus("available");
-      setImageFile(null);
-
       setTimeout(() => navigate("/dashboard/cars"), 1500);
     } catch (err) {
       setMessage(err.response?.data?.message || "Failed to create car");
@@ -83,7 +112,10 @@ const AddCar = () => {
                 ? "bg-red-100 text-red-700"
                 : "bg-green-100 text-green-700"
             }`}
-          > {message} </div>
+          >
+            {" "}
+            {message}{" "}
+          </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -172,13 +204,13 @@ const AddCar = () => {
               <input
                 type="file"
                 accept="image/*"
-                onChange={(e) => setImageFile(e.target.files[0])}
+                onChange={handleImageUpload}
                 className="w-full px-4 py-2 border rounded-lg cursor-pointer"
               />
-              {imageFile && (
+              {imageData?.url && (
                 <div className="mt-2">
                   <img
-                    src={URL.createObjectURL(imageFile)}
+                    src={imageData.url}
                     alt=""
                     className="w-40 h-28 object-cover rounded-lg border"
                   />

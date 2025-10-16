@@ -12,6 +12,8 @@ const DriverRegister = () => {
     license_number: "",
     nid: "",
     experience_years: "",
+    password: "",
+    password_confirmation: "",
   });
 
   const [licenseImage, setLicenseImage] = useState(null);
@@ -20,6 +22,10 @@ const DriverRegister = () => {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
 
+  const CLOUDINARY_URL =
+    "https://api.cloudinary.com/v1_1/dsgoi1hul/image/upload";
+  const CLOUDINARY_UPLOAD_PRESET = "car_rental";
+
   const handleChange = (e) => {
     setForm({
       ...form,
@@ -27,29 +33,39 @@ const DriverRegister = () => {
     });
   };
 
+  const uploadImage = async (file) => {
+    if (!file) return null;
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+    const res = await fetch(CLOUDINARY_URL, { method: "POST", body: fd });
+    const data = await res.json();
+    return data.secure_url;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMsg("");
     setLoading(true);
     try {
-      const fd = new FormData();
-      Object.keys(form).forEach((k) => {
-        if (form[k] !== "") fd.append(k, form[k]);
-      });
-      if (licenseImage) fd.append("license_image", licenseImage);
-      if (nidImage) fd.append("nid_image", nidImage);
-      if (profilePhoto) fd.append("profile_photo", profilePhoto);
+      const licenseUrl = await uploadImage(licenseImage);
+      const nidUrl = await uploadImage(nidImage);
+      const profileUrl = await uploadImage(profilePhoto);
 
-      const res = await api.post("/driver/register", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const payload = { ...form };
+      if (licenseUrl) payload.license_image = licenseUrl;
+      if (licenseUrl) payload.nid_image = nidUrl;
+      if (licenseUrl) payload.profile_photo = profileUrl;
+
+      const res = await api.post("/driver/register", payload);
 
       setMsg(
         res.data.message +
           (res.data.default_password
-            ? `Default Password;${res.data.default_password}`
+            ? `Default Password:${res.data.default_password}`
             : "")
       );
+
       setForm({
         first_name: "",
         last_name: "",
@@ -59,13 +75,17 @@ const DriverRegister = () => {
         license_number: "",
         nid: "",
         experience_years: "",
+        password: "",
+        password_confirmation: "",
       });
       setLicenseImage(null);
       setNidImage(null);
-      setProfilePhoto(null);
+      setProfilePhoto(null)
     } catch (err) {
-      setMsg(err.response?.data?.message || "Registration Failed!");
-    } finally {
+      console.error(err);
+      setMsg("Registration Failed!");
+      
+    }finally{
       setLoading(false);
     }
   };
@@ -180,15 +200,27 @@ const DriverRegister = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="">
               <label className="block mb-1">License Image</label>
-              <input type="file" accept="image/*" onChange={(e)=>setLicenseImage(e.target.files[0])} />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setLicenseImage(e.target.files[0])}
+              />
             </div>
             <div className="">
               <label className="block mb-1">NID Image</label>
-              <input type="file" accept="image/*" onChange={(e)=>setNidImage(e.target.files[0])} />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setNidImage(e.target.files[0])}
+              />
             </div>
             <div className="">
               <label className="block mb-1">Profile Photo</label>
-              <input type="file" accept="image/*" onChange={(e)=>setProfilePhoto(e.target.files[0])} />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setProfilePhoto(e.target.files[0])}
+              />
             </div>
           </div>
           <div className="flex justify-end">
@@ -197,9 +229,7 @@ const DriverRegister = () => {
               disabled={loading}
               className="px-4 py-2 bg-[#778BFF] text-white rounded"
             >
-              {
-                loading ? "Submitting...":"Register"
-              }
+              {loading ? "Submitting..." : "Register"}
             </button>
           </div>
         </form>

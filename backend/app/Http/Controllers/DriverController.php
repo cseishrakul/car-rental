@@ -21,9 +21,9 @@ class DriverController extends Controller
             'nid' => 'nullable|string|max:100',
             'experience_years' => 'nullable|integer|min:0',
             'password' => 'required|string|min:6|confirmed',
-            'license_image' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
-            'nid_image' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
-            'profile_image' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
+            'license_image' => 'nullable|string',
+            'nid_image' => 'nullable|string',
+            'profile_photo' => 'nullable|string',
         ]);
 
         $user = User::create([
@@ -33,13 +33,6 @@ class DriverController extends Controller
             'role' => 'driver',
             'email_verified_at' => null
         ]);
-
-        $licenseImagePath = $request->hasFile('license_image') ? $request->file('license_image')->store('drivers/licenses', 'public') : null;
-
-        $nidImagePath = $request->hasFile('nid_image') ? $request->file('nid_image')->store('drivers/nids', 'public') : null;
-
-        $profilePhotoPath = $request->hasFile('profile_photo') ? $request->file('profile_photo')->store('drivers/profile', 'public') : null;
-
         $profile = DriverProfile::create([
             'user_id' => $user->id,
             'phone' => $data['phone'],
@@ -47,10 +40,9 @@ class DriverController extends Controller
             'license_number' => $data['license_number'],
             'nid' => $data['nid'] ?? null,
             'experience_years' => $data['experience_years'] ?? null,
-            'license_image' => $licenseImagePath ? asset('storage/' . $licenseImagePath) : null,
-            'nid_image' => $nidImagePath ? asset('storage/' . $nidImagePath) : null,
-            'profile_photo' => $profilePhotoPath ? asset('storage/' . $profilePhotoPath) : null,
-            'status' => 'pending',
+            'license_image' => $data['license_image'] ?? null,
+            'nid_image' => $data['nid_image'] ?? null,
+            'profile_photo' => $data['profile_photo'] ?? null
         ]);
 
         return response()->json([

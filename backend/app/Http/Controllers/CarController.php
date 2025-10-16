@@ -25,14 +25,9 @@ class CarController extends Controller
             'model' => 'required|string|max:255',
             'daily_rate' => 'required|numeric|min:0',
             'status' => 'in:available,booked,maintenance',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048'
+            'image' => 'nullable|url',
+            'image_public_id' => 'nullable|string',
         ]);
-
-        if ($request->hasFile('image')) {
-            $filename = time() . '-' . $request->file('image')->getClientOriginalName();
-            $request->file('image')->move(public_path('uploads/cars'), $filename);
-            $data['image'] = 'uploads/cars/' . $filename;
-        }
 
         $car = Car::create($data);
         return response()->json([
@@ -54,18 +49,9 @@ class CarController extends Controller
             'model' => 'required|string|max:255',
             'daily_rate' => 'required|numeric|min:0',
             'status' => 'in:available,booked,maintenance',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048'
+            'image' => 'nullable|url',
+            'image_public_id' => 'nullable|string',
         ]);
-
-        if ($request->hasFile('image')) {
-            if ($car->image && file_exists(public_path(($car->image)))) {
-                unlink(public_path($car->image));
-            }
-
-            $filename = time() . '-' . $request->file('image')->getClientOriginalName();
-            $request->file('image')->move(public_path('uploads/cars'), $filename);
-            $data['image'] = 'uploads/cars/' . $filename;
-        }
 
         $car->update($data);
         return response()->json([
