@@ -1,12 +1,26 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Title from "./Title";
 import { dummyCarData } from "../../assets/assets";
 import CarCard from "./CarCard";
 import { FiArrowRight } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import { getFeaturedCars } from "../../api/carApi";
 
 const FeaturedSection = () => {
+  const [cars, setCars] = useState([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await getFeaturedCars();
+        setCars(data);
+      } catch (err) {
+        console.error("Failed to fetch cars", err);
+      }
+    })();
+  }, []);
+
   return (
     <div className="flex flex-col items-center py-24 px-6 md:px-16 lg:px-24 xl:px-32">
       <div className="">
@@ -16,10 +30,8 @@ const FeaturedSection = () => {
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-18">
-        {dummyCarData.slice(0, 6).map((car) => (
-          <div key={car._id} className="">
-            <CarCard car={car} />
-          </div>
+        {cars.map((car) => (
+          <CarCard key={car.id} car={car} />
         ))}
       </div>
       <button

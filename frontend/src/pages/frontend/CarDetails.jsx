@@ -4,20 +4,33 @@ import { assets, dummyCarData } from "../../assets/assets";
 import { FiArrowRight } from "react-icons/fi";
 import { FaRegCheckCircle } from "react-icons/fa";
 import Loader from "../../components/frontend/Loader";
+import { getCarById } from "../../api/carApi";
 
 const CarDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [car, setCar] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
   };
 
   useEffect(() => {
-    setCar(dummyCarData.find((car) => car._id === id));
+    (async () => {
+      try {
+        const data = await getCarById(id);
+        setCar(data);
+      } catch (err) {
+        console.error("Failed to fetch cars", err);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [id]);
+
+  if (loading) return <Loader />;
+  if (!car) return <p className="text-center mt-10">Car not found</p>;
 
   return car ? (
     <div
@@ -38,13 +51,10 @@ const CarDetails = () => {
           />
           <div className="space-y-6">
             <div className="">
-              <h1 className="text-3xl font-bold">
-                {" "}
-                {car.brand} {car.model}{" "}
-              </h1>
+              <h1 className="text-3xl font-bold">{car.name}</h1>
               <p className="text-gray-500 text-lg">
                 {" "}
-                {car.category} . {car.year}{" "}
+                {car.brand} {car.model}{" "}
               </p>
             </div>
             <hr className="border-borderColor my-6" />
@@ -75,13 +85,7 @@ const CarDetails = () => {
             <div className="">
               <h1 className="text-xl font-medium mb-3">Features</h1>
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {[
-                  "360 Camera",
-                  "Bluetooth",
-                  "GPS",
-                  "Heated Seats",
-                  "Rear View Mirror",
-                ].map((item) => (
+                {car.features?.map((item) => (
                   <li key={item} className="flex items-center text-gray-500">
                     <FaRegCheckCircle className="h-4 mr-2 text-blue-600" />
                     {item}
@@ -99,7 +103,7 @@ const CarDetails = () => {
         >
           <p className="flex items-center justify-between text-xl text-gray-800 font-semibold">
             {" "}
-            ${car.pricePerDay}{" "}
+            ${car.daily_rate}{" "}
             <span className="text-base text-gray-400 font-normal">Per Day</span>{" "}
           </p>
           <hr className="border-borderColor my-6" />

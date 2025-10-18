@@ -1,6 +1,4 @@
 import { Route, Routes, useLocation } from "react-router";
-import Public from "./Public";
-import LandingPage from "../pages/frontend/LandingPage";
 import SignIn from "../pages/AuthPages/SignIn";
 import SignUp from "../pages/AuthPages/SignUp";
 import DriverRegister from "../pages/Driver/DriverRegister";

@@ -27,6 +27,12 @@ class CarController extends Controller
             'status' => 'in:available,booked,maintenance',
             'image' => 'nullable|url',
             'image_public_id' => 'nullable|string',
+            'seating_capacity' => 'nullable|integer|min:1',
+            'fuel_type' => 'nullable|string|max:50',
+            'transmission' => 'nullable|string|max:50',
+            'location' => 'nullable|string|max:100',
+            'description' => 'nullable|string',
+            'features' => 'nullable|array',
         ]);
 
         $car = Car::create($data);
@@ -51,6 +57,12 @@ class CarController extends Controller
             'status' => 'in:available,booked,maintenance',
             'image' => 'nullable|url',
             'image_public_id' => 'nullable|string',
+            'seating_capacity' => 'nullable|integer|min:1',
+            'fuel_type' => 'nullable|string|max:50',
+            'transmission' => 'nullable|string|max:50',
+            'location' => 'nullable|string|max:100',
+            'description' => 'nullable|string',
+            'features' => 'nullable|array',
         ]);
 
         $car->update($data);
@@ -59,8 +71,6 @@ class CarController extends Controller
             'car' => $car
         ]);
     }
-
-
 
     public function destroy(Request $request, Car $car)
     {
@@ -72,5 +82,34 @@ class CarController extends Controller
         $car->delete();
 
         return response()->json(['message' => 'Car deleted successfully!']);
+    }
+
+    // Frontend Data Fetching Api
+    public function carPage()
+    {
+        $cars = Car::orderBy('id', 'asc')->get();
+        return response()->json($cars);
+    }
+
+    public function featured()
+    {
+        $cars = Car::orderBy('id', 'desc')->where('status', 'available')->take(6)->get();
+
+        return response()->json($cars);
+    }
+
+
+    public function carDetails($id)
+    {
+        $car = Car::find($id);
+        if (!$car) {
+            return response()->json([
+                'message' => 'Car not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'data' => $car
+        ], 200);
     }
 }

@@ -2,18 +2,46 @@ import React, { useState } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import { useNavigate } from "react-router";
 import api from "../../api/axios";
+import { Editor } from "react-draft-wysiwyg";
+import { convertToRaw, EditorState } from "draft-js";
+import draftToHtml from "draftjs-to-html";
+import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 
 const AddCar = () => {
-  const [name, setName] = useState("");
-  const [brand, setBrand] = useState("");
-  const [model, setModel] = useState("");
-  const [dailyRate, setDailyRate] = useState("");
-  const [status, setStatus] = useState("available");
-  const [imageFile, setImageFile] = useState(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    brand: "",
+    model: "",
+    dailyRate: "",
+    status: "available",
+    seating_capacity: "",
+    fuel_type: "",
+    transmission: "",
+    location: "",
+  });
+
+  const [description, setDescription] = useState(EditorState.createEmpty());
+  const [features, setFeatures] = useState([]);
+  const [featureInput, setFeatureInput] = useState("");
+
   const [imageData, setImageData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleAddFeature = () => {
+    if (featureInput.trim() !== "") {
+      setFeatures([...features, featureInput.trim()]);
+      setFeatureInput("");
+    }
+  };
+
+  const handleRemoveFeature = (index) => {
+    setFeatures(features.filter((_, i) => i !== index));
+  };
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -54,38 +82,46 @@ const AddCar = () => {
     setMessage("");
     setLoading(true);
 
-    if (dailyRate <= 0) {
-      setMessage("Daily rate must be greater than 0");
-      setLoading(false);
-      return;
-    }
-
     try {
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("brand", brand);
-      formData.append("model", model);
-      formData.append("daily_rate", dailyRate);
-      formData.append("status", status);
+      const submitData = new FormData();
+      submitData.append("name", formData.name);
+      submitData.append("brand", formData.brand);
+      submitData.append("model", formData.model);
+      submitData.append("daily_rate", formData.dailyRate);
+      submitData.append("status", formData.status);
+      submitData.append("seating_capacity", formData.seating_capacity);
+      submitData.append("fuel_type", formData.fuel_type);
+      submitData.append("transmission", formData.transmission);
+      submitData.append("location", formData.location);
+      submitData.append(
+        "description",
+        draftToHtml(convertToRaw(description.getCurrentContent()))
+      );
 
-      if(imageData){
-        formData.append("image",imageData.url);
-        formData.append("image_public_id",imageData.public_id)
+      if (imageData) {
+        submitData.append("image", imageData.url);
       }
 
-      const res = await api.post("/cars", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      features.forEach((feature) => submitData.append("features[]", feature));
+
+      const res = await api.post("/cars", submitData);
 
       setMessage(res.data.message || "Car created successfully!");
-      setName("");
-      setBrand("");
-      setModel("");
-      setDailyRate("");
-      setStatus("available");
-      setTimeout(() => navigate("/dashboard/cars"), 1500);
+      setFormData({
+        name: "",
+        brand: "",
+        model: "",
+        dailyRate: "",
+        status: "available",
+        seating_capacity: "",
+        fuel_type: "",
+        transmission: "",
+        location: "",
+      });
+      setDescription(EditorState.createEmpty());
+      setFeatures([]);
+      setImageData(null);
+      setFeatureInput("");
     } catch (err) {
       setMessage(err.response?.data?.message || "Failed to create car");
     } finally {
@@ -119,86 +155,110 @@ const AddCar = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="flex flex-col md:flex-row md:gap-4">
-            <div className="flex-1">
-              <label
-                htmlFor=""
-                className="block mb-1 font-medium text-gray-700"
-              >
-                Car Name
-              </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              "name",
+              "brand",
+              "model",
+              "dailyRate",
+              "seating_capacity",
+              "fuel_type",
+              "transmission",
+              "location",
+            ].map((field) => (
+              <div key={field}>
+                <label className="block mb-1 font-medium text-gray-700">
+                  {" "}
+                  {field.replace("_", " ").toUpperCase()}{" "}
+                </label>
+                <input
+                  name={field}
+                  type={
+                    field === "dailyRate" || field === "seating_capacity"
+                      ? "number"
+                      : "text"
+                  }
+                  value={formData[field]}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                  required
+                />
+              </div>
+            ))}
+          </div>
+          <div className="">
+            <label className="block mb-1 font-medium text-gray-700">
+              Description
+            </label>
+            <Editor
+              editorState={description}
+              onEditorStateChange={setDescription}
+              wrapperClassName="border rounded-lg"
+              editorClassName="p-2 min-h-[120px]"
+              toolbar={{
+                options: ["inline", "list", "textAlign", "link", "history"],
+                inline: { options: ["bold", "italic", "underline"] },
+              }}
+            />
+          </div>
+          {/* Features */}
+          <div className="">
+            <label className="block mb-1 font-medium text-gray-700">
+              Features
+            </label>
+            <div className="flex gap-2 mb-2">
               <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none "
+                type="text"
+                value={featureInput}
+                onChange={(e) => setFeatureInput(e.target.value)}
+                placeholder="Add features"
+                className="pz-3 py-2 border rounded-lg flex-1"
               />
+              <button
+                type="button"
+                onClick={handleAddFeature}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+              >
+                Add
+              </button>
             </div>
-            <div className="flex-1">
-              <label
-                htmlFor=""
-                className="block mb-1 font-medium text-gray-700"
-              >
-                Brand
-              </label>
-              <input
-                value={brand}
-                onChange={(e) => setBrand(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none "
-              />
+            <div className="flex flex-wrap gap-2">
+              {features.map((feat, i) => (
+                <span
+                  key={i}
+                  className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full flex items-center gap-1"
+                >
+                  {" "}
+                  {feat}
+                  <button
+                    type="button"
+                    onClick={()=>handleRemoveFeature(i)}
+                    className="text-red-500 font-bold"
+                  >
+                    X
+                  </button>{" "}
+                </span>
+              ))}
             </div>
           </div>
-          <div className="flex flex-col md:flex-row md:gap-4">
-            <div className="flex-1">
-              <label
-                htmlFor=""
-                className="block mb-1 font-medium text-gray-700"
-              >
-                Model
-              </label>
-              <input
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none "
-              />
-            </div>
-            <div className="flex-1">
-              <label
-                htmlFor=""
-                className="block mb-1 font-medium text-gray-700"
-              >
-                Daily Rate ($)
-              </label>
-              <input
-                type="number"
-                value={dailyRate}
-                onChange={(e) => setDailyRate(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none "
-              />
-            </div>
-          </div>
-          <div className="flex flex-col md:flex-row md:gap-4">
-            <div className="flex-1">
-              <label
-                htmlFor=""
-                className="block mb-1 font-medium text-gray-700"
-              >
+          <div className="flex flex-col md:flex-row md:gap-4 items-center">
+            <div className="flex-">
+              <label className="block mb-1 font-medium text-gray-700">
                 Status
               </label>
               <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none "
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
               >
-                <option value="available">Available</option>
-                <option value="booked">Booked</option>
+                <option value="available">Avaiable</option>
                 <option value="maintenance">Maintenance</option>
+                <option value="booked">Booked</option>
               </select>
             </div>
             <div className="flex-1">
-              <label
-                htmlFor=""
-                className="block mb-1 font-medium text-gray-700"
-              >
+              <label className="block mb-1 font-medium text-gray-700">
                 Car Image
               </label>
               <input
@@ -208,22 +268,21 @@ const AddCar = () => {
                 className="w-full px-4 py-2 border rounded-lg cursor-pointer"
               />
               {imageData?.url && (
-                <div className="mt-2">
-                  <img
-                    src={imageData.url}
-                    alt=""
-                    className="w-40 h-28 object-cover rounded-lg border"
-                  />
-                </div>
+                <img
+                  src={imageData.url}
+                  alt=""
+                  className="w-40 h-40 mt-4 object-cover rounded-lg border"
+                />
               )}
             </div>
           </div>
           <button
-            disabled={loading}
             type="submit"
-            className="w-full px-6 py-3 border-2 border-blue-600 text-[#465FFF] rounded-lg shadow-md transition-all duration-200 hover:bg-[#465FFF] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading}
+            className="w-full px-6 py-2 border-2 border-blue-600 text-[#465FFF] rounded-lg shadow-md transition-all duration-200 hover:bg-[#465FFF] hover:text-white disabled:opactity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Adding...." : "Add Car"}
+            {" "}
+            {loading ? "Processing" : "Add Car"}{" "}
           </button>
         </form>
       </div>

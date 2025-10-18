@@ -13,6 +13,12 @@ Route::post('/login', [AuthController::class, 'login']);
 // Driver Register
 Route::post('/driver/register', [DriverController::class, 'driverRegister']);
 
+// Frontend Api
+Route::get('/cars-page',[CarController::class,'carPage']);
+Route::get('cars/featured',[CarController::class,'featured']);
+Route::get('/cars/{id}',[CarController::class,'carDetails']);
+
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('logout', [AuthController::class, 'logout']);

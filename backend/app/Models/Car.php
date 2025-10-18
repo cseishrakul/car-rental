@@ -15,6 +15,17 @@ class Car extends Model
         'model',
         'daily_rate',
         'status',
-        'image'
+        'image',
+        'image_public_id',
+        'seating_capacity',
+        'fuel_type',
+        'transmission',
+        'location',
+        'description',
+        'features'
+    ];
+
+    protected $casts = [
+        'features' => 'array'
     ];
 }
