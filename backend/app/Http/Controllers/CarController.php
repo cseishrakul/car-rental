@@ -42,6 +42,10 @@ class CarController extends Controller
         ], 201);
     }
 
+    public function show(Car $car){
+        return response()->json(['car'=>$car]);
+    }
+
     public function update(Request $request, Car $car)
     {
         $auth = $request->user();

@@ -17,6 +17,7 @@ const AllCar = () => {
   });
 
   const [editImage, setEditImage] = useState(null);
+  const [viewCar, setViewCar] = useState(null);
 
   const fetchCars = async () => {
     try {
@@ -42,6 +43,19 @@ const AllCar = () => {
       setMessage(err.response?.data?.message || "Delete Failed!");
     }
   };
+
+  useEffect(() => {
+    if (viewCar) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    const handleEsc = (e) => {
+      if (e.key === "Escape") setViewCar(null);
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [viewCar]);
 
   const handleEditClick = (car) => {
     setEditingCar(car);
@@ -102,7 +116,6 @@ const AllCar = () => {
         title="All Car | Dashboard"
         description="This is All Car page"
       />
-
       <div className="p-6">
         <h2 className="text-2xl font-semibold mb-6 text-gray-800 text-center">
           All Car
@@ -167,17 +180,18 @@ const AllCar = () => {
                   </td>
                   <td className="border px-4 py-2 text-center flex justify-center gap-3">
                     <button
-                      onClick={() => alert(JSON.stringify(car, null, 2))}
+                      onClick={() => setViewCar(car)}
                       className="text-blue-600 hover:text-blue-800"
                     >
                       <FiEye size={18} />
                     </button>
-                    <button
-                      onClick={() => handleEditClick(car)}
+                    <a
+                      href={`edit-car/${car.id}`}
                       className="text-green-600 hover:text-green-800"
                     >
                       <FiEdit size={18} />
-                    </button>
+                    </a>
+
                     <button
                       onClick={() => handleDelete(car.id)}
                       className="text-red-600 hover:text-red-800"
@@ -201,7 +215,6 @@ const AllCar = () => {
           </table>
         </div>
       </div>
-
       {/* EditModel */}
       {editingCar && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
@@ -308,6 +321,90 @@ const AllCar = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Show All Details */}
+      {viewCar && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-y-auto max-h-[90vh] relative animate-scaleIn">
+            {/* Header */}
+            <div className="flex justify-between items-center p-4 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800">
+                {viewCar.name}
+              </h2>
+              <button
+                onClick={() => setViewCar(null)}
+                className="text-gray-500 hover:text-gray-700 rounded-full p-2 hover:bg-gray-100 transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Image */}
+            <div className="w-full h-64 overflow-hidden rounded-t-2xl">
+              <img
+                src={viewCar.image || "/images/car/default.png"}
+                alt={viewCar.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              <div className="flex flex-wrap gap-4 text-gray-700">
+                <p>
+                  <strong>Brand:</strong> {viewCar.brand}
+                </p>
+                <p>
+                  <strong>Model:</strong> {viewCar.model}
+                </p>
+                <p>
+                  <strong>Daily Rate:</strong> ${viewCar.daily_rate}
+                </p>
+                <p>
+                  <strong>Seats:</strong> {viewCar.seating_capacity}
+                </p>
+                <p>
+                  <strong>Fuel:</strong> {viewCar.fuel_type}
+                </p>
+                <p>
+                  <strong>Transmission:</strong> {viewCar.transmission}
+                </p>
+                <p>
+                  <strong>Location:</strong> {viewCar.location}
+                </p>
+              </div>
+
+              <hr className="border-gray-200" />
+
+              {/* Description */}
+              <div>
+                <h3 className="font-semibold text-gray-800 mb-2">
+                  Description
+                </h3>
+                <p
+                  className="text-gray-600"
+                  dangerouslySetInnerHTML={{
+                    __html: viewCar.description || "No description available",
+                  }}
+                />
+              </div>
+
+              <hr className="border-gray-200" />
+
+              {/* Features */}
+              <div>
+                <h3 className="font-semibold text-gray-800 mb-2">Features</h3>
+                <ul className="list-disc list-inside text-gray-600">
+                  {viewCar.features?.length > 0 ? (
+                    viewCar.features.map((f, idx) => <li key={idx}>{f}</li>)
+                  ) : (
+                    <li>No features available</li>
+                  )}
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       )}
