@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CarController;
 use App\Http\Controllers\DriverController;
+use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -12,6 +13,8 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 // Driver Register
 Route::post('/driver/register', [DriverController::class, 'driverRegister']);
+// User Register
+Route::post('/social-login',[SocialAuthController::class,'socialLogin']);
 
 // Frontend Api
 Route::get('/cars-page',[CarController::class,'carPage']);

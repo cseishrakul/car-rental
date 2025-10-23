@@ -7,6 +7,7 @@ import {
   FaUser,
 } from "react-icons/fa";
 import Loader from "../frontend/Loader"; // ✅ Import Loader
+import SocialLoginButton from "./SocialLoginButton";
 
 const Login = ({ setShowLogin }) => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -173,21 +174,9 @@ const Login = ({ setShowLogin }) => {
 
         {/* Social Logins */}
         <div className="flex flex-col gap-3">
-          <button
-            type="button"
-            className="flex items-center justify-center gap-2 border border-gray-300 py-2.5 rounded-full text-gray-800 hover:bg-gray-100 transition cursor-pointer"
-          >
+          <SocialLoginButton provider="google">
             <FaGoogle className="text-red-500 text-lg" />
-            Continue with Google
-          </button>
-
-          <button
-            type="button"
-            className="flex items-center justify-center gap-2 border border-gray-300 py-2.5 rounded-full text-gray-800 hover:bg-gray-100 transition cursor-pointer"
-          >
-            <FaFacebook className="text-blue-600 text-lg" />
-            Continue with Facebook
-          </button>
+          </SocialLoginButton>
         </div>
       </div>
     </div>
