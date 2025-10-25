@@ -13,6 +13,7 @@ import {
   FiTable,
   FiUser,
   FiUsers,
+  FiBookmark,
 } from "react-icons/fi";
 import { LuPlug2 } from "react-icons/lu";
 
@@ -83,16 +84,12 @@ const menuItems = {
       ],
     },
     {
-      icon: <FiList />,
+      icon: <FiBookmark />,
       name: "Bookings",
       subItems: [
         {
-          name: "Add Driver",
-          path: "/dashboard/add-driver",
-        },
-        {
-          name: "All Driver",
-          path: "/dashboard/drivers",
+          name: "All Bookings",
+          path: "/dashboard/bookings",
         },
       ],
     },
@@ -146,16 +143,12 @@ const menuItems = {
       ],
     },
     {
-      icon: <FiList />,
+      icon: <FiBookmark />,
       name: "Bookings",
       subItems: [
         {
-          name: "Add Driver",
-          path: "/dashboard/add-driver",
-        },
-        {
-          name: "All Driver",
-          path: "/dashboard/drivers",
+          name: "All Bookings",
+          path: "/dashboard/bookings",
         },
       ],
     },

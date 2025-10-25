@@ -47,109 +47,89 @@ const Login = ({ setShowLogin }) => {
   };
 
   return (
-    <div
-      id="loginModal"
-      onClick={handleBackdropClick}
-      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 text-sm text-gray-600"
-    >
-      <div className="bg-white text-gray-600 w-full max-w-md mx-4 md:p-6 p-5 rounded-2xl shadow-lg relative">
-        <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">
-          {isSignUp ? "Create an Account ✨" : "Welcome Back 👋"}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-white px-4">
+      <div className="bg-white w-full max-w-md p-10 rounded-3xl shadow-2xl relative">
+        <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">
+          {isSignUp ? "Create Account" : "Welcome Back"}
         </h2>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {isSignUp && (
             <div className="relative">
-              <FaUser className="absolute left-4 top-3.5 text-gray-400" />
+              <FaUser className="absolute left-3 top-3.5 text-gray-400" />
               <input
                 id="name"
                 type="text"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="Enter your name"
+                placeholder="Full Name"
                 required
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-full outline-none focus:border-indigo-500 transition"
+                className="w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400"
               />
             </div>
           )}
 
           <div className="relative">
-            <FaEnvelope className="absolute left-4 top-3.5 text-gray-400" />
+            <FaEnvelope className="absolute left-3 top-3.5 text-gray-400" />
             <input
               id="email"
               type="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="Enter your email"
+              placeholder="Email"
               required
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-full outline-none focus:border-indigo-500 transition"
+              className="w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400"
             />
           </div>
 
           <div className="relative">
-            <FaLock className="absolute left-4 top-3.5 text-gray-400" />
+            <FaLock className="absolute left-3 top-3.5 text-gray-400" />
             <input
               id="password"
               type="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="Enter your password"
+              placeholder="Password"
               required
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-full outline-none focus:border-indigo-500 transition"
+              className="w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400"
             />
           </div>
 
           {isSignUp && (
             <div className="relative">
-              <FaLock className="absolute left-4 top-3.5 text-gray-400" />
+              <FaLock className="absolute left-3 top-3.5 text-gray-400" />
               <input
                 id="confirmPassword"
                 type="password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                placeholder="Confirm your password"
+                placeholder="Confirm Password"
                 required
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-full outline-none focus:border-indigo-500 transition"
+                className="w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400"
               />
-            </div>
-          )}
-
-          {!isSignUp && (
-            <div className="text-right">
-              <a href="#" className="text-indigo-600 hover:underline text-sm">
-                Forgot password?
-              </a>
             </div>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className={`w-full flex items-center justify-center gap-2 ${
+            className={`w-full py-3 rounded-xl text-white font-semibold transition-all ${
               loading ? "bg-indigo-400" : "bg-indigo-600 hover:bg-indigo-700"
-            } transition py-2.5 rounded-full text-white font-medium cursor-pointer`}
+            }`}
           >
-            {loading ? (
-              <Loader size={20} inline color="white" />
-            ) : isSignUp ? (
-              "Sign Up"
-            ) : (
-              "Log In"
-            )}
+            {loading ? "Processing..." : isSignUp ? "Sign Up" : "Log In"}
           </button>
         </form>
 
-        {/* Switch Mode */}
-        <p className="text-center mt-4 text-gray-700">
+        <p className="text-center mt-4 text-gray-600">
           {isSignUp ? (
             <>
               Already have an account?{" "}
               <span
                 onClick={() => setIsSignUp(false)}
-                className="text-indigo-600 font-medium hover:underline cursor-pointer"
+                className="text-indigo-600 font-semibold cursor-pointer hover:underline"
               >
-                Log in
+                Log In
               </span>
             </>
           ) : (
@@ -157,25 +137,26 @@ const Login = ({ setShowLogin }) => {
               Don’t have an account?{" "}
               <span
                 onClick={() => setIsSignUp(true)}
-                className="text-indigo-600 font-medium hover:underline cursor-pointer"
+                className="text-indigo-600 font-semibold cursor-pointer hover:underline"
               >
-                Sign up
+                Sign Up
               </span>
             </>
           )}
         </p>
 
         {/* Divider */}
-        <div className="flex items-center my-5">
+        <div className="flex items-center my-6">
           <div className="flex-grow h-px bg-gray-300"></div>
-          <span className="px-3 text-gray-500 text-sm">or</span>
+          <span className="px-3 text-gray-500 text-sm">or continue with</span>
           <div className="flex-grow h-px bg-gray-300"></div>
         </div>
 
         {/* Social Logins */}
         <div className="flex flex-col gap-3">
           <SocialLoginButton provider="google">
-            <FaGoogle className="text-red-500 text-lg" />
+            <FaGoogle className="text-red-500 text-lg mr-2" />
+            Continue with Google
           </SocialLoginButton>
         </div>
       </div>
