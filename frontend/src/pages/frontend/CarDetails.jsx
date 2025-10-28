@@ -5,16 +5,19 @@ import { FiArrowRight } from "react-icons/fi";
 import { FaRegCheckCircle } from "react-icons/fa";
 import Loader from "../../components/frontend/Loader";
 import { getCarById } from "../../api/carApi";
+import api from "../../api/axios";
 
 const CarDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [car, setCar] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-  };
+  const [pickupDate, setPickupDate] = useState("");
+  const [returnDate, setReturnDate] = useState("");
+  const [days, setDays] = useState(0);
+  const [amount, setAmount] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState("sslcommerz");
+  const [bookingLoading, setBookingLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -29,14 +32,87 @@ const CarDetails = () => {
     })();
   }, [id]);
 
+  // Calculate total days and amount
+  useEffect(() => {
+    if (pickupDate && returnDate && car) {
+      const diff =
+        (new Date(returnDate) - new Date(pickupDate)) / (1000 * 60 * 60 * 24) +
+        1;
+      setDays(diff > 0 ? diff : 0);
+      setAmount(diff > 0 ? diff * car.daily_rate : 0);
+    }
+  }, [pickupDate, returnDate, car]);
+
+  const initialSSLPayment = async (bookingId) => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) return alert("Please login first!");
+
+    try {
+      const res = await api.post(
+        "/sslcommerz/initiate",
+        { booking_id: bookingId, amount },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data.GatewayPageURL) {
+        window.location.href = res.data.GatewayPageURL;
+      } else {
+        alert("Payment initiation failed");
+        console.error(res.data);
+      }
+    } catch (err) {
+      console.error("SSL Commerz initiation errror:", err);
+      alert("payment initiation failed");
+    }
+  };
+
+  const handleBooking = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      alert("Please Login First");
+      return;
+    }
+    if (!pickupDate || !returnDate) {
+      alert("Please select both pickup and return date!");
+      return;
+    }
+
+    setBookingLoading(true);
+    try {
+      const res = await api.post(
+        "/bookings",
+        {
+          car_id: car.id,
+          pickup_date: pickupDate,
+          return_date: returnDate,
+          payment_method: paymentMethod,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const booking = res.data.booking;
+
+      if (paymentMethod === "sslcommerz") {
+        await initialSSLPayment(booking.id);
+      } else if (paymentMethod === "stripe") {
+        alert("Stripe");
+      } else {
+        alert("Stripe Failed");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Booking failed");
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
   if (loading) return <Loader />;
   if (!car) return <p className="text-center mt-10">Car not found</p>;
 
   return car ? (
-    <div
-      onClick={() => navigate(-1)}
-      className="px-6 md:px-16 lg:px-24 xl:px-32 mt-16"
-    >
+    <div className="px-6 md:px-16 lg:px-24 xl:px-32 mt-16">
       <button className="flex items-center gap-2 mb-6 text-gray-500 cursor-pointer">
         <FiArrowRight className="rotate-180 opacity-65" />
         Back To All Cars
@@ -98,7 +174,7 @@ const CarDetails = () => {
 
         {/* Right: Booking Form */}
         <form
-          onSubmit={handleSubmit}
+          onSubmit={handleBooking}
           className="shadow-lg h-max sticky top-18 rounded-xl p-6 space-y-6 text-gray-500"
         >
           <p className="flex items-center justify-between text-xl text-gray-800 font-semibold">
@@ -116,6 +192,8 @@ const CarDetails = () => {
               required
               id="pickup-date"
               min={new Date().toISOString().split("T")[0]}
+              value={pickupDate}
+              onChange={(e) => setPickupDate(e.target.value)}
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -125,10 +203,31 @@ const CarDetails = () => {
               className="border border-borderColor px-3 py-2 rounded-lg"
               required
               id="return-date"
+              value={returnDate}
+              onChange={(e) => setReturnDate(e.target.value)}
             />
           </div>
-          <button className="w-full bg-primary hover:bg-primary-dull transition-all py-3 font-medium text-white rounded-xl cursor-pointer">
-            Book Now
+          {days > 0 && (
+            <p className="">
+              <strong>Days:</strong> {days} <strong>Total: </strong> ${amount}
+            </p>
+          )}
+          <div className="flex flex-col gap-2">
+            <label htmlFor="">Payment Method</label>
+            <select
+              className="border px-3 py-2 rounded-lg"
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            >
+              <option value="stripe">Stripe</option>
+              <option value="sslcommerz">SSLCommerz</option>
+            </select>
+          </div>
+          <button
+            className="w-full bg-primary hover:bg-primary-dull transition-all py-3 font-medium text-white rounded-xl cursor-pointer"
+            disabled={bookingLoading}
+          >
+            {bookingLoading ? "Processing.." : "Book Now"}
           </button>
           <p className="text-center text-sm">
             {" "}

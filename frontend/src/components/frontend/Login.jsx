@@ -6,12 +6,15 @@ import {
   FaLock,
   FaUser,
 } from "react-icons/fa";
-import Loader from "../frontend/Loader"; // ✅ Import Loader
+import Loader from "../frontend/Loader";
 import SocialLoginButton from "./SocialLoginButton";
+import { useNavigate } from "react-router-dom";
+import axios from "../../api/axios";
 
 const Login = ({ setShowLogin }) => {
+  const navigate = useNavigate();
   const [isSignUp, setIsSignUp] = useState(false);
-  const [loading, setLoading] = useState(false); // ✅ Loader state
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -23,23 +26,44 @@ const Login = ({ setShowLogin }) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); // show loader
-    setTimeout(() => {
-      setLoading(false); // stop loader
+    setLoading(true);
+    try {
+      let res;
       if (isSignUp) {
         if (formData.password !== formData.confirmPassword) {
-          alert("❌ Passwords do not match!");
+          alert("Password do not matched!");
+          setLoading(false);
           return;
         }
-        console.log("Sign Up Data:", formData);
-        alert("Account created successfully 🎉");
+
+        res = await axios.post("/register", {
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          password_confirmation: formData.confirmPassword,
+        });
+        alert("Account created successfully!");
       } else {
-        console.log("Login Data:", formData);
-        alert("Login successful ✅");
+        res = await axios.post("/login", {
+          email: formData.email,
+          password: formData.password,
+        });
+        alert("Login Successfully!");
       }
-    }, 1500); // simulate network delay
+
+      if (res?.data?.token) {
+        localStorage.setItem("auth_token", res.data.token);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+        navigate("/");
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Errored!");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBackdropClick = (e) => {

@@ -7,6 +7,85 @@ import { FiArrowLeft } from "react-icons/fi";
 export default function BookingDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [booking, setBooking] = useState(null);
+  const [driver, setDriver] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
+  const [cancel, setCancel] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const fetchBookings = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("auth_token");
+      const res = await api.get(`/admin/bookings/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setBooking(res.data.booking);
+      setDriver(res.data.driver || null);
+    } catch (err) {
+      console.error(err);
+      setMessage("Failed to fetch booking!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBookings();
+  }, [id]);
+
+  const confirmBooking = async () => {
+    if (!window.confirm("Are you sure you want to confirm this booking?"))
+      return;
+    setUpdating(true);
+    try {
+      const token = localStorage.getItem("auth_token");
+      const res = await api.patch(
+        `/admin/bookings/${id}/confirm`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setBooking(res.data.booking);
+      alert(res.data.message);
+      navigate("/dashboard/bookings");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to confirm booking!");
+    } finally {
+      setUpdating(false);
+    }
+  };
+  const cancelBooking = async () => {
+    if (!window.confirm("Are you sure you want to cancel this booking?"))
+      return;
+    setCancel(true);
+    try {
+      const token = localStorage.getItem("auth_token");
+      const res = await api.patch(
+        `/admin/bookings/${id}/cancel`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setBooking(res.data.booking);
+      alert(res.data.message);
+      navigate("/dashboard/bookings");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to cancel booking!");
+    } finally {
+      setCancel(false);
+    }
+  };
+
+  if (loading) return <p className="text-center mt-10"> Loading... </p>;
+  if (!booking) return <p className="text-center mt-10"> Booking not found </p>;
+
+  const { user, car } = booking;
 
   return (
     <div className="px-6 md:px-16 lg:px-24 xl:px-32 mt-16">
@@ -115,6 +194,35 @@ export default function BookingDetails() {
             </p>
           </div>
 
+          {/* Driver Info */}
+          {driver ? (
+            <div className="shadow-lg p-6 rounded-xl bg-white">
+              <h2 className="text-xl font-semibold mb-4">Driver Details</h2>
+              <p>
+                <strong>Name:</strong> {driver.name}
+              </p>
+              <p>
+                <strong>Email:</strong> {driver.email}
+              </p>
+              <p>
+                <strong>Phone:</strong> {driver.phone}
+              </p>
+              <p>
+                <strong>Address:</strong> {driver.address}
+              </p>
+              <p>
+                <strong>License:</strong> {driver.license_number}
+              </p>
+              <p>
+                <strong>Nid:</strong> {driver.nid}
+              </p>
+            </div>
+          ) : (
+            <div className="shadow-lg p-6 rounded-xl bg-white">
+              No driver assigned to this car!
+            </div>
+          )}
+
           {/* Car Info */}
           <div className="shadow-lg p-6 rounded-xl bg-white">
             <h2 className="text-xl font-semibold mb-4">Car Details</h2>
@@ -150,4 +258,3 @@ export default function BookingDetails() {
     </div>
   );
 }
-

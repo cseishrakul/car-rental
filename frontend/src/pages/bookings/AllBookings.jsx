@@ -1,18 +1,43 @@
 import PageMeta from "../../components/common/PageMeta";
 import api from "../../api/axios";
 import { useEffect, useState } from "react";
-import { FiEye } from "react-icons/fi";
+import { FiEye, FiFileText } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
 export default function AllBookings() {
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const navigate = useNavigate();
+
+  const fetchBookings = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/admin/bookings");
+      setBookings(res.data || []);
+    } catch (err) {
+      console.error(err);
+      setMessage("Failed to fetch bookings");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBookings();
+  }, []);
+
   return (
     <>
-      <PageMeta title="All Bookings | Dashboard" description="Bookings dashboard" />
+      <PageMeta
+        title="All Bookings | Dashboard"
+        description="Bookings dashboard"
+      />
 
       <div className="p-6">
         <h2 className="text-xl font-semibold mb-4">All Bookings</h2>
 
-        {/* {message && <div className="mb-4 text-sm text-green-700">{message}</div>} */}
+        {message && <div className="mb-4 text-sm text-green-700">{message}</div>}
 
         <div className="overflow-x-auto">
           <table className="w-full border-collapse border border-gray-200 shadow-sm rounded-lg">
@@ -30,10 +55,10 @@ export default function AllBookings() {
               </tr>
             </thead>
             <tbody>
-              {/* {bookings.map((booking, index) => (
+              {bookings.map((booking, index) => (
                 <tr key={booking.id} className="hover:bg-gray-50">
                   <td className="border px-4 py-2">{index + 1}</td>
-                  <td className="border px-4 py-2">{booking.car?.brand} {booking.car?.model}</td>
+                  <td className="border px-4 py-2">{booking.car?.name} </td>
                   <td className="border px-4 py-2">{booking.user?.name}</td>
                   <td className="border px-4 py-2">{booking.pickup_date}</td>
                   <td className="border px-4 py-2">{booking.return_date}</td>
@@ -88,7 +113,7 @@ export default function AllBookings() {
                         <button
                           onClick={() =>
                             navigate(
-                              `/dashboard/bookings-details/${booking.id}`
+                              `/dashboard/booking-details/${booking.id}`
                             )
                           }
                           className="text-blue-600 hover:text-blue-800"
@@ -100,7 +125,7 @@ export default function AllBookings() {
                     ) : (
                       <button
                         onClick={() =>
-                          navigate(`/dashboard/bookings-details/${booking.id}`)
+                          navigate(`/dashboard/booking-details/${booking.id}`)
                         }
                         className="text-blue-600 hover:text-blue-800"
                         title="View Details"
@@ -117,7 +142,7 @@ export default function AllBookings() {
                     No bookings found
                   </td>
                 </tr>
-              )} */}
+              )}
             </tbody>
           </table>
         </div>

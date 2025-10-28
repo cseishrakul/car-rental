@@ -28,4 +28,10 @@ class Car extends Model
     protected $casts = [
         'features' => 'array'
     ];
+
+    public function driverProfile(){
+        return $this->hasOne(DriverProfile::class,'assigned_car_id','id');
+    }
+
+   
 }

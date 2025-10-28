@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Car;
+use App\Models\DriverProfile;
 use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -83,32 +84,167 @@ class BookingController extends Controller
         ], 500);
     }
 
-    public function success(Request $request){
-        $booking = Booking::where('transaction_id',$request->tran_id)->first();
-        if($booking){
+    public function success(Request $request)
+    {
+        $booking = Booking::where('transaction_id', $request->tran_id)->first();
+        if ($booking) {
             $booking->update([
                 'payment_status' => 'paid',
                 'booking_status' => 'pending'
             ]);
         }
-        return redirect()->away('http://localhost:5173/payment-success?tran_id='.$request->tran_id);
+        return redirect()->away('http://localhost:5173/payment-success?tran_id=' . $request->tran_id);
     }
-    public function fail(Request $request){
-        $booking = Booking::where('transaction_id',$request->tran_id)->first();
-        if($booking){
+    public function fail(Request $request)
+    {
+        $booking = Booking::where('transaction_id', $request->tran_id)->first();
+        if ($booking) {
             $booking->update([
                 'booking_status' => 'cancelled'
             ]);
         }
-        return redirect()->away('http://localhost:5173/payment-fail?tran_id='.$request->tran_id);
+        return redirect()->away('http://localhost:5173/payment-fail?tran_id=' . $request->tran_id);
     }
-    public function cancel(Request $request){
-        $booking = Booking::where('transaction_id',$request->tran_id)->first();
-        if($booking){
+    public function cancel(Request $request)
+    {
+        $booking = Booking::where('transaction_id', $request->tran_id)->first();
+        if ($booking) {
             $booking->update([
                 'booking_status' => 'cancelled'
             ]);
         }
-        return redirect()->away('http://localhost:5173/payment-cancel?tran_id='.$request->tran_id);
+        return redirect()->away('http://localhost:5173/payment-cancel?tran_id=' . $request->tran_id);
+    }
+
+
+    // Admin Approve
+    public function allBookings(Request $request)
+    {
+        $auth = $request->user();
+        if (!in_array($auth->role, ['admin', 'manager'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $bookings = Booking::with('user', 'car')->get();
+        return response()->json($bookings);
+    }
+
+    public function confirmBooking(Request $request, $id)
+    {
+        $auth = $request->user();
+        if (!in_array($auth->role, ['admin', 'manager'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $booking = Booking::with('car')->findOrFail($id);
+
+        if ($booking->payment_status !== 'paid') {
+            return response()->json(['message' => 'Payment not done yet!'], 400);
+        }
+
+        $booking->update(['booking_status' => 'confirmed']);
+
+        if ($booking->car) {
+            $booking->car->update([
+                'status' => 'booked',
+            ]);
+        }
+
+        $message = "Booking Confirmed Successfully!. Car  `{$booking->car->name} is booked!` ";
+
+        if ($booking->driver) {
+            $message .= " and assigned to driver '{$booking->driver->user->name}' ";
+        }
+
+        return response()->json([
+            'message' => $message,
+            'booking' => $booking
+        ]);
+    }
+
+
+    public function cancelBooking(Request $request, $id)
+    {
+        $auth = $request->user();
+        if (!in_array($auth->role, ['admin', 'manager'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $booking = Booking::findOrFail($id);
+        $booking->update(['booking_status' => 'cancelled']);
+        return response()->json([
+            'message' => 'Booking cancelled successfully!',
+            'booking' => $booking
+        ]);
+    }
+
+    public function show(Request $request, $id)
+    {
+        $auth = $request->user();
+        if (!in_array($auth->role, ['admin', 'manager'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $booking = Booking::with(['user', 'car'])->find($id);
+
+        if (!$booking) {
+            return response()->json(['message' => 'Booking not found!'], 404);
+        }
+
+        $driverProfile = DriverProfile::with('user')->where('assigned_car_id', $booking->car_id)->first();
+
+        $driver = $driverProfile ? [
+            'name' => $driverProfile->user->name ?? null,
+            'email' => $driverProfile->user->email ?? null,
+            'phone' => $driverProfile->phone,
+            'address' => $driverProfile->address,
+            'license_number' => $driverProfile->license_number,
+            'nid' => $driverProfile->nid,
+        ] : null;
+
+        return response()->json(['booking' => $booking, 'driver' => $driver]);
+    }
+
+    public function userBookings(Request $request)
+    {
+        $user = $request->user();
+        $bookings = Booking::with(['car', 'car.driverProfile.user'])->where('user_id', $user->id)->orderBy('created_at', 'desc')->get()->map(function ($booking) {
+            $driverProfile = $booking->car->driverProfile;
+            return [
+                'id' => $booking->id,
+                'pickup_date' => $booking->pickup_date,
+                'return_date' => $booking->return_date,
+                'days' => $booking->days,
+                'amount' => $booking->amount,
+                'booking_status' => $booking->booking_status,
+                'payment_status' => $booking->payment_status,
+                'transaction_id' => $booking->transaction_id,
+                'car' => $booking->car,
+                'driver' =>         $driver = $driverProfile ? [
+                    'name' => $driverProfile->user->name ?? null,
+                    'email' => $driverProfile->user->email ?? null,
+                    'phone' => $driverProfile->phone,
+                    'address' => $driverProfile->address,
+                    'license_number' => $driverProfile->license_number,
+                    'nid' => $driverProfile->nid,
+                ] : null
+            ];
+        });
+
+        return response()->json(['bookings' => $bookings]);
+    }
+
+    public function driverBookings(Request $request)
+    {
+        $driver = $request->user();
+        $assignedCarIds = DriverProfile::where('user_id', $driver->id)->pluck('assigned_car_id')->filter()->toArray();
+
+        if (empty($assignedCarIds)) {
+            return response()->json(['bookingd' => []]);
+        }
+
+        $bookings = Booking::with(['user', 'car'])->whereIn('car_id', $assignedCarIds)->where('booking_status', 'confirmed')->orderBy('pickup_date', 'asc')->get();
+
+        return response()->json(['bookings' => $bookings]);
     }
 }

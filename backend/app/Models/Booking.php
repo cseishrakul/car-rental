@@ -30,4 +30,9 @@ class Booking extends Model
     {
         return $this->belongsTo(Car::class);
     }
+
+    public function driver()
+    {
+        return $this->belongsTo(DriverProfile::class);
+    }
 }

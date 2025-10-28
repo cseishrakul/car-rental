@@ -1,11 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { assets, dummyMyBookingsData } from "../../assets/assets";
 import Title from "../../components/frontend/Title";
+import api from "../../api/axios";
 
 const MyBooking = () => {
   const [bookings, setBookings] = useState([]);
   const fetchMyBookings = async () => {
-    setBookings(dummyMyBookingsData);
+    try {
+      const token = localStorage.getItem("auth_token");
+      const res = await api.get("/user/bookings", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setBookings(res.data.bookings);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => {
@@ -18,86 +27,94 @@ const MyBooking = () => {
         subTitle="View and manage your all car bookings"
         align="left"
       />
-      <div className="">
-        {bookings.map((booking, index) => (
-          <div
-            key={booking._id}
-            className="grid grid-cols-1 md:grid-cols-4 gap-6 p-6 border border-borderColor rounded-lg mt-5 first:mt-12"
-          >
-            {/* Car Image and info */}
-            <div className="md:col-span-1">
-              <div className="rounded-md overflow-hidden mb-3">
-                <img
-                  src={booking.car.image}
-                  alt=""
-                  className="w-full h-auto aspect-video object-cover"
-                />
+      {bookings ? (
+        <div className="">
+          {bookings.map((booking, index) => (
+            <div
+              key={booking._id}
+              className="grid grid-cols-1 md:grid-cols-4 gap-6 p-6 border border-borderColor rounded-lg mt-5 first:mt-12"
+            >
+              {/* Car Image and info */}
+              <div className="md:col-span-1">
+                <div className="rounded-md overflow-hidden mb-3">
+                  <img
+                    src={booking.car.image}
+                    alt=""
+                    className="w-full h-auto aspect-video object-cover"
+                  />
+                </div>
+                <p className="text-lg font-medium mt-2">
+                  {" "}
+                  {booking.car.brand} {booking.car.model}{" "}
+                </p>
+                <p className="text-gray-500">
+                  {" "}
+                  {booking.car.year} . {booking.car.category} .{" "}
+                  {booking.car.location}{" "}
+                </p>
               </div>
-              <p className="text-lg font-medium mt-2">
-                {" "}
-                {booking.car.brand} {booking.car.model}{" "}
-              </p>
-              <p className="text-gray-500">
-                {" "}
-                {booking.car.year} . {booking.car.category} .{" "}
-                {booking.car.location}{" "}
-              </p>
-            </div>
 
-            {/* Booking info */}
-            <div className="md:col-span-2">
-              <div className="flex items-center gap-2">
-                <p className="px-3 py-1.5 bg-light rounded">
-                  Booking #{index + 1}{" "}
-                </p>
-                <p
-                  className={`px-3 py-1 text-xs rounded-full ${
-                    booking.status === "confirmed"
-                      ? "bg-green-400/15 text-green-600"
-                      : "bg-red-400/15 text-red-600"
-                  }`}
-                >
-                  {booking.status}
-                </p>
-              </div>
-              <div className="flex items-start gap-2 mt-3">
-                <img
-                  src={assets.calendar_icon_colored}
-                  alt=""
-                  className="w-4 h-4 mt-1"
-                />
-                <div className="">
-                  <p className="text-gray-500">Rental Period</p>
-                  <p className="">
-                    {booking.pickupDate.split("T")[0]} To{" "}
-                    {booking.returnDate.split("T")[0]}
+              {/* Booking info */}
+              <div className="md:col-span-2">
+                <div className="flex items-center gap-2">
+                  <p className="px-3 py-1.5 bg-light rounded">
+                    Booking #{index + 1}{" "}
+                  </p>
+                  <p
+                    className={`px-3 py-1 text-xs rounded-full ${
+                      booking.booking_status === "confirmed"
+                        ? "bg-green-400/15 text-green-600"
+                        : "bg-red-400/15 text-red-600"
+                    }`}
+                  >
+                    {booking.booking_status}
                   </p>
                 </div>
+                <div className="flex items-start gap-2 mt-3">
+                  <img
+                    src={assets.calendar_icon_colored}
+                    alt=""
+                    className="w-4 h-4 mt-1"
+                  />
+                  <div className="">
+                    <p className="text-gray-500">Rental Period</p>
+                    <p className="">
+                      {booking.pickup_date.split("T")[0]} To{" "}
+                      {booking.return_date.split("T")[0]}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2 mt-3">
+                  <img
+                    src={assets.calendar_icon_colored}
+                    alt=""
+                    className="w-4 h-4 mt-1"
+                  />
+                  <div className="">
+                    <p className="text-gray-500">Pickup Location</p>
+                    <p className="">{booking.car.location}</p>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-start gap-2 mt-3">
-                <img
-                  src={assets.calendar_icon_colored}
-                  alt=""
-                  className="w-4 h-4 mt-1"
-                />
-                <div className="">
-                  <p className="text-gray-500">Pickup Location</p>
-                  <p className="">{booking.car.location}
-                  </p>
+              {/* Price */}
+              <div className="md:col-span-1 flex flex-col justify-between gap-6">
+                <div className="text-sm text-gray-500 text-right">
+                  <p className="">Total Amount</p>
+                  <h1 className="text-2xl font-semibold text-primary">
+                    {" "}
+                    $ {booking.amount}{" "}
+                  </h1>
+                  
                 </div>
               </div>
             </div>
-            {/* Price */}
-            <div className="md:col-span-1 flex flex-col justify-between gap-6">
-              <div className="text-sm text-gray-500 text-right">
-                <p className="">Total Price</p>
-                <h1 className="text-2xl font-semibold text-primary"> $ {booking.price} </h1>
-                <p className=""> Booked on {booking.createdAt.split('T')[0]} </p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="shadow-lg p-6 rounded-xl bg-white">
+          You have to login first
+        </div>
+      )}
     </div>
   );
 };

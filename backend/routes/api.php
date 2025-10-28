@@ -55,6 +55,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bookings',[BookingController::class,'store']);
     Route::post('/sslcommerz/initiate',[BookingController::class,'initiateSSL']);
 
+
+    // Admin & Manager Booking control
+    Route::get('/admin/bookings',[BookingController::class,'allBookings']);
+    Route::get('/admin/bookings/{id}',[BookingController::class,'show']);
+    Route::patch('admin/bookings/{id}/confirm',[BookingController::class,'confirmBooking']);
+    Route::patch('admin/bookings/{id}/cancel',[BookingController::class,'cancelBooking']);
+
+
+    // User and Driver Bookings Page
+    Route::get('/user/bookings',[BookingController::class,'userBookings']);
+    Route::get('/driver/bookings',[BookingController::class,'driverBookings']);
+
+
 });
 Route::post('/sslcommerz/success',[BookingController::class,'success']);
 Route::post('/sslcommerz/fail',[BookingController::class,'fail']);

@@ -11,7 +11,8 @@ import DriverList from "../pages/Driver/DriverList";
 import DriverProfile from "../pages/Driver/DriverProfile";
 import EditCar from "../pages/Cars/EditCar";
 import AllBookings from "../pages/bookings/AllBookings";
-import BookingDetails from "../pages/bookings/bookingDetails";
+import BookingDetails from "../pages/bookings/BookingDetails";
+import MyAssignment from "../pages/Driver/MyAssignment";
 
 export default function ProtectedRoute() {
   return (
@@ -30,6 +31,7 @@ export default function ProtectedRoute() {
           />
           <Route path="/dashboard/drivers-list" element={<DriverList />} />
           <Route path="/dashboard/driver/profile" element={<DriverProfile />} />
+          <Route path="/dashboard/my-assignments" element={<MyAssignment />} />
 
           {/* Bookings */}
           <Route path="/dashboard/bookings" element={<AllBookings />} />

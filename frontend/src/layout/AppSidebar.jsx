@@ -157,7 +157,7 @@ const menuItems = {
     {
       icon: <FiGrid />,
       name: "My Assignments",
-      path: "/dashboard",
+      path: "/dashboard/my-assignments",
     },
     {
       icon: <FiUser />,

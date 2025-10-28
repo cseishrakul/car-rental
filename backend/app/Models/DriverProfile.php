@@ -10,7 +10,7 @@ class DriverProfile extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id','phone','address','license_number','nid_number','license_image',    'nid_image','profile_photo','experience_years','status','assigned_car_id'
+        'user_id','phone','address','license_number','nid','license_image',    'nid_image','profile_photo','experience_years','status','assigned_car_id'
     ];
 
     public function user(){
