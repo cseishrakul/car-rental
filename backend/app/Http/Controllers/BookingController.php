@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Car;
 use App\Models\DriverProfile;
+use Carbon\Carbon;
 use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -246,5 +248,62 @@ class BookingController extends Controller
         $bookings = Booking::with(['user', 'car'])->whereIn('car_id', $assignedCarIds)->where('booking_status', 'confirmed')->orderBy('pickup_date', 'asc')->get();
 
         return response()->json(['bookings' => $bookings]);
+    }
+
+    public function monthlyBookings()
+    {
+        $monthlyBookings = Booking::select(DB::raw('EXTRACT(MONTH FROM pickup_date) AS month'), DB::raw('COUNT(*) as total'))->whereYear('pickup_date', date('Y'))->groupBy(DB::raw('EXTRACT(MONTH FROM pickup_date)'))->orderBy('month')->get();
+
+        $bookingsData = array_fill(0, 12, 0);
+        foreach ($monthlyBookings as $b) {
+            $bookingsData[$b->month - 1] = $b->total;
+        }
+
+        return response()->json([
+            'monthlyBookings' => $bookingsData
+        ]);
+    }
+
+    public function weeklyStatistics(){
+        $today = Carbon::now();
+        $saturday = $today->copy()->previous(Carbon::SATURDAY);
+        $sunday = $saturday->copy()->addDay();
+        $monday = $sunday->copy()->addDay();
+        $tuesday = $monday->copy()->addDay();
+        $wednesday = $tuesday->copy()->addDay();
+        $thursday = $wednesday->copy()->addDay();
+
+        $dates = [$saturday,$sunday,$monday,$tuesday,$wednesday,$thursday];
+
+        $dailyData = Booking::select(
+            DB::raw('DATE(pickup_date) as date' ),
+            DB::raw('COUNT(*) as bookings')
+        )->whereIn(DB::raw('DATE(pickup_date)'),[
+            $saturday->format('Y-m-d'),
+            $sunday->format('Y-m-d'),
+            $monday->format('Y-m-d'),
+            $tuesday->format('Y-m-d'),
+            $wednesday->format('Y-m-d'),
+            $thursday->format('Y-m-d'),
+        ])->groupBy(DB::raw('DATE(pickup_date)'))->orderBy('date')->get();
+
+        $labels  = [];
+        $bookings=[];
+        foreach($dates as $d){
+            $tables[] = $d->format('D');
+            $bookings[] = 0;
+        }
+
+        foreach($dailyData as $data){
+            $index = array_search(Carbon::parse($data->date)->format('D'),$labels);
+            if($index !==false){
+                $bookings[$index] = $data->bookings;
+            }
+        }
+
+        return response()->json([
+            'dates' => $labels,
+            'bookings' => $bookings
+        ]);
     }
 }

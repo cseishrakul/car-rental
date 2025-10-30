@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import api from "../../api/axios";
 import { FiEdit, FiEye, FiTrash2 } from "react-icons/fi";
+import Swal from "sweetalert2";
 
 const AllCar = () => {
   const [cars, setCars] = useState([]);
@@ -32,15 +33,30 @@ const AllCar = () => {
     fetchCars();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this car?")) return;
 
-    try {
-      await api.delete(`/cars/${id}`);
-      setMessage("Car delete successfully!");
-      fetchCars();
-    } catch (err) {
-      setMessage(err.response?.data?.message || "Delete Failed!");
+  const handleDelete = async (id) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to delete this car!",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes",
+      cancelButtonText: "Cancel",
+    });
+    if (result.isConfirmed) {
+      try {
+        await api.delete(`/cars/${id}`);
+        await Swal.fire({
+          title: "Deleted!",
+          text: "Car has been deleted.",
+          icon: "success",
+        });
+        fetchCars();
+      } catch (err) {
+        Swal.fire("Error!", "Delete Failed", "error");
+      }
     }
   };
 

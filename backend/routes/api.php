@@ -67,6 +67,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/bookings',[BookingController::class,'userBookings']);
     Route::get('/driver/bookings',[BookingController::class,'driverBookings']);
 
+    // Dynamic Routes
+    Route::get('/monthly-bookings',[BookingController::class,'monthlyBookings']);
+    Route::get('/weekly-statistics',[BookingController::class,'weeklyStatistics']);
+
+    Route::get('/dashboard-metrics',[AuthController::class,'metrics']);
+
 
 });
 Route::post('/sslcommerz/success',[BookingController::class,'success']);

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import api from "../../api/axios";
+import Swal from "sweetalert2";
 
 const AddManager = () => {
   const [name, setName] = useState("");
@@ -15,13 +16,12 @@ const AddManager = () => {
       setManager(res.data.data || res.data);
     } catch (err) {
       console.log(err);
-      
     }
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchManagers();
-  },[]);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,17 +41,31 @@ const AddManager = () => {
     }
   };
 
-
-const handleDelete = async (id) => {
-  if(!confirm("Delete this manager?")) return;
-  try{
-    await api.delete(`/managers/${id}`)
-    setMessage("Manager Deleted!");
-    fetchManagers();
-  }catch (err){
-    setMessage(err.response?.data?.message || "Delete Failed!");
-  }
-}
+  const handleDelete = async (id) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to delete this manager!",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Confirm",
+      cancelButtonText: "Cancel",
+    });
+    if (result.isConfirmed) {
+      try {
+        await api.delete(`/managers/${id}`);
+        await Swal.fire({
+          title: "Deleted!",
+          text: "Manager has been deleted.",
+          icon: "success",
+        });
+        fetchManagers();
+      } catch (err) {
+        Swal.fire("Error!", "Delete Failed", "error");
+      }
+    }
+  };
 
   return (
     <>
@@ -117,21 +131,33 @@ const handleDelete = async (id) => {
           </tr>
         </thead>
         <tbody>
-          {manager.length === 0 ?(
+          {manager.length === 0 ? (
             <tr>
-              <td colSpan="5" className="text-center py-4 text-gray-500 italic">No Managers Found</td>
+              <td colSpan="5" className="text-center py-4 text-gray-500 italic">
+                No Managers Found
+              </td>
             </tr>
-          ):(
+          ) : (
             manager.map((m) => (
               <tr key={m.id} className="hover:bg-gray-50">
                 <td className="border px-4 py-2"> {m.id} </td>
                 <td className="border px-4 py-2"> {m.name} </td>
                 <td className="border px-4 py-2"> {m.email} </td>
-                <td className="border px-4 py-2"> {new Date(m.created_at).toLocaleDateString()} </td>
-                <td className="border px-4 py-2"> 
-                  <button className="text-[#4860FF] hover:underline mr-2">View</button>
-                  <button onClick={()=>handleDelete(m.id)} className="text-red-500 hover:underline mr-2">Delete</button>
-                   </td>
+                <td className="border px-4 py-2">
+                  {" "}
+                  {new Date(m.created_at).toLocaleDateString()}{" "}
+                </td>
+                <td className="border px-4 py-2">
+                  <button className="text-[#4860FF] hover:underline mr-2">
+                    View
+                  </button>
+                  <button
+                    onClick={() => handleDelete(m.id)}
+                    className="text-red-500 hover:underline mr-2"
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
             ))
           )}

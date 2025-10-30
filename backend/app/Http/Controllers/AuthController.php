@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -55,5 +56,19 @@ class AuthController extends Controller
     public function logout(Request $request){
         $request->user()->tokens()->delete();
         return response()->json(['message' => 'Logged out successfully!']);
+    }
+
+    public function metrics(){
+        $totalUsers = User::where('role','user')->count();
+        $totalManagers = User::where('role','manager')->count();
+        $totalDrivers = User::where('role','driver')->count();
+        $totalTrips = Booking::count();
+
+        return response()->json([
+            'totalUsers' => $totalUsers,
+            'totalManagers' => $totalManagers,
+            'totalDrivers' => $totalDrivers,
+            'totalTrips' => $totalTrips,
+        ]);
     }
 }
