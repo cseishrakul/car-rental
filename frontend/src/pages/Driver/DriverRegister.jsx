@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import api from "../../api/axios";
+import Swal from "sweetalert2";
 
 const DriverRegister = () => {
   const [form, setForm] = useState({
@@ -54,17 +55,12 @@ const DriverRegister = () => {
 
       const payload = { ...form };
       if (licenseUrl) payload.license_image = licenseUrl;
-      if (licenseUrl) payload.nid_image = nidUrl;
-      if (licenseUrl) payload.profile_photo = profileUrl;
+      if (nidImage) payload.nid_image = nidUrl;
+      if (profileUrl) payload.profile_photo = profileUrl;
 
       const res = await api.post("/driver/register", payload);
 
-      setMsg(
-        res.data.message +
-          (res.data.default_password
-            ? `Default Password:${res.data.default_password}`
-            : "")
-      );
+      Swal.fire("Success", res.data.message, "success");
 
       setForm({
         first_name: "",
@@ -80,12 +76,10 @@ const DriverRegister = () => {
       });
       setLicenseImage(null);
       setNidImage(null);
-      setProfilePhoto(null)
+      setProfilePhoto(null);
     } catch (err) {
-      console.error(err);
-      setMsg("Registration Failed!");
-      
-    }finally{
+      Swal.fire("Error", res.data.message, "error");
+    } finally {
       setLoading(false);
     }
   };

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\DriverProfile;
 use App\Models\User;
+use App\Notifications\DriverApplicationCreate;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -45,8 +47,15 @@ class DriverController extends Controller
             'profile_photo' => $data['profile_photo'] ?? null
         ]);
 
+        event(new Registered($user));
+
+        $adminsAndManagers = User::whereIn('role',['admin','manager'])->get();
+        foreach($adminsAndManagers as $user){
+            $user->notify(new DriverApplicationCreate($driver));
+        }
+
         return response()->json([
-            'message' => 'Driver Registration Done.Awaiting For Manager To Approve It!',
+            'message' => 'Driver Registration Done.Please confirm your email & Wait For Manager To Approve It!',
             'driver' => [
                 'user' => $user->only(['id', 'name', 'email', 'role']),
                 'profile' => $profile

@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\BookingCancelled;
+use App\Mail\BookingConfirmed;
 use App\Models\Booking;
 use App\Models\Car;
 use App\Models\DriverProfile;
+use App\Models\User;
+use App\Notifications\BookingCreated;
 use Carbon\Carbon;
 use DateTime;
 use Illuminate\Http\Request;
@@ -12,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class BookingController extends Controller
@@ -39,6 +44,11 @@ class BookingController extends Controller
             'amount' => $amount,
             'payment_method' => $request->payment_method
         ]);
+
+        $adminsAndManagers = User::whereIn('role',['admin','manager'])->get();
+        foreach($adminsAndManagers as $user){
+            $user->notify(new BookingCreated($booking));
+        }
 
         return response()->json(['booking' => $booking], 201);
     }
@@ -152,6 +162,10 @@ class BookingController extends Controller
             ]);
         }
 
+        if ($booking->user && $booking->user->email) {
+            Mail::to($booking->user->email)->send(new BookingConfirmed($booking));
+        }
+
         $message = "Booking Confirmed Successfully!. Car  `{$booking->car->name} is booked!` ";
 
         if ($booking->driver) {
@@ -174,6 +188,9 @@ class BookingController extends Controller
 
         $booking = Booking::findOrFail($id);
         $booking->update(['booking_status' => 'cancelled']);
+        if ($booking->user && $booking->user->email) {
+            Mail::to($booking->user->email)->send(new BookingCancelled($booking));
+        }
         return response()->json([
             'message' => 'Booking cancelled successfully!',
             'booking' => $booking
@@ -264,7 +281,8 @@ class BookingController extends Controller
         ]);
     }
 
-    public function weeklyStatistics(){
+    public function weeklyStatistics()
+    {
         $today = Carbon::now();
         $saturday = $today->copy()->previous(Carbon::SATURDAY);
         $sunday = $saturday->copy()->addDay();
@@ -273,12 +291,12 @@ class BookingController extends Controller
         $wednesday = $tuesday->copy()->addDay();
         $thursday = $wednesday->copy()->addDay();
 
-        $dates = [$saturday,$sunday,$monday,$tuesday,$wednesday,$thursday];
+        $dates = [$saturday, $sunday, $monday, $tuesday, $wednesday, $thursday];
 
         $dailyData = Booking::select(
-            DB::raw('DATE(pickup_date) as date' ),
+            DB::raw('DATE(pickup_date) as date'),
             DB::raw('COUNT(*) as bookings')
-        )->whereIn(DB::raw('DATE(pickup_date)'),[
+        )->whereIn(DB::raw('DATE(pickup_date)'), [
             $saturday->format('Y-m-d'),
             $sunday->format('Y-m-d'),
             $monday->format('Y-m-d'),
@@ -288,15 +306,15 @@ class BookingController extends Controller
         ])->groupBy(DB::raw('DATE(pickup_date)'))->orderBy('date')->get();
 
         $labels  = [];
-        $bookings=[];
-        foreach($dates as $d){
+        $bookings = [];
+        foreach ($dates as $d) {
             $tables[] = $d->format('D');
             $bookings[] = 0;
         }
 
-        foreach($dailyData as $data){
-            $index = array_search(Carbon::parse($data->date)->format('D'),$labels);
-            if($index !==false){
+        foreach ($dailyData as $data) {
+            $index = array_search(Carbon::parse($data->date)->format('D'), $labels);
+            if ($index !== false) {
                 $bookings[$index] = $data->bookings;
             }
         }

@@ -10,6 +10,7 @@ import Loader from "../frontend/Loader";
 import SocialLoginButton from "./SocialLoginButton";
 import { useNavigate } from "react-router-dom";
 import axios from "../../api/axios";
+import Swal from "sweetalert2";
 
 const Login = ({ setShowLogin }) => {
   const navigate = useNavigate();
@@ -32,25 +33,44 @@ const Login = ({ setShowLogin }) => {
     try {
       let res;
       if (isSignUp) {
-        if (formData.password !== formData.confirmPassword) {
-          alert("Password do not matched!");
-          setLoading(false);
-          return;
-        }
-
         res = await axios.post("/register", {
           name: formData.name,
           email: formData.email,
           password: formData.password,
           password_confirmation: formData.confirmPassword,
         });
-        alert("Account created successfully!");
+        Swal.fire(
+          "Account Created!",
+          "Registration successful! Please check your email and verify your account before logged in!",
+          "success"
+        );
+
+        setIsSignUp(false);
+        setFormData({
+          name: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+        });
       } else {
         res = await axios.post("/login", {
           email: formData.email,
           password: formData.password,
         });
-        alert("Login Successfully!");
+
+        const user = res.data.user;
+
+        if (!user.email_verified_at) {
+          Swal.fire(
+            "Email Not Verified!",
+            "Please verify your email first.We have sent the verification link to your email",
+            "warning"
+          );
+          return;
+        }
+
+        Swal.fire("Success", "Login successfully!", "success");
+        navigate("/");
       }
 
       if (res?.data?.token) {
@@ -60,9 +80,26 @@ const Login = ({ setShowLogin }) => {
       }
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Errored!");
+      Swal.fire("Error", err.response?.data?.message || "Error!", "error");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const resendVerificationEmail = async () => {
+    try {
+      await axios.post("/email/verification-notification");
+      Swal.fire(
+        "Verification Sent!",
+        "Email verification link has been resent to your email",
+        "success"
+      );
+    } catch (err) {
+      Swal.fire(
+        "Error",
+        err.response?.data?.message || "Could not send email!",
+        "error"
+      );
     }
   };
 
@@ -133,7 +170,6 @@ const Login = ({ setShowLogin }) => {
               />
             </div>
           )}
-
           <button
             type="submit"
             disabled={loading}
@@ -143,6 +179,16 @@ const Login = ({ setShowLogin }) => {
           >
             {loading ? "Processing..." : isSignUp ? "Sign Up" : "Log In"}
           </button>
+          {!isSignUp && (
+            <div className="mt-3 text-center">
+              <button
+                onClick={resendVerificationEmail}
+                className="text-sm text-primary font-semibold hover:underline"
+              >
+                Resen Verification Email
+              </button>
+            </div>
+          )}
         </form>
 
         <p className="text-center mt-4 text-gray-600">

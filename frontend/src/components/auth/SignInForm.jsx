@@ -20,6 +20,10 @@ export default function SignInForm() {
 
     try {
       const res = await api.post("/login", { email, password });
+      if (!res.data.user.email_verified_at) {
+        setError("Please verify your email before logged in!");
+        return;
+      }
       localStorage.setItem("auth_token", res.data.token);
       localStorage.setItem("auth_user", JSON.stringify(res.data.user));
 
@@ -93,7 +97,7 @@ export default function SignInForm() {
           </div>
 
           <form onSubmit={handleSubmit}>
-            {error && <p className="text-red-600 text-sm my-2">{error}</p> }
+            {error && <p className="text-red-600 text-sm my-2">{error}</p>}
             <div className="space-y-6">
               <div>
                 <Label>
